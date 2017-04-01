@@ -9,41 +9,41 @@
 import Foundation
 
 /// Closure to unarchive data
-public typealias ArchiveUnarchiveProcedure = (data: NSData) -> Archivable
+public typealias ArchiveUnarchiveProcedure = (_ data: Data) -> Archivable
 
 /// Closure to restore struct from unarchived dictionary
-public typealias ArchiveRestoreProcedure = (dictionary: ArchivableDictionary) -> Archivable
+public typealias ArchiveRestoreProcedure = (_ dictionary: ArchivableDictionary) -> Archivable
 
 /// Class to store procedures for Archive.
-public class StructArchiver {
+open class StructArchiver {
     
     /// Return shared archiver.
-    public static let defaultArchiver: StructArchiver = StructArchiver()
+    open static let defaultArchiver: StructArchiver = StructArchiver()
     
     /// Store procedure to unarchive data.
-    private var unarchiveProcedures: [String: ArchiveUnarchiveProcedure] = [String: ArchiveUnarchiveProcedure]()
+    fileprivate var unarchiveProcedures: [String: ArchiveUnarchiveProcedure] = [String: ArchiveUnarchiveProcedure]()
     
     /// Store procedure to restore data.
-    private var restoreProcedures: [String: ArchiveRestoreProcedure] = [String: ArchiveRestoreProcedure]()
+    fileprivate var restoreProcedures: [String: ArchiveRestoreProcedure] = [String: ArchiveRestoreProcedure]()
     
     /// Register procedure to unarchive data.
     /// - parameter identifier: string to specify struct
     /// - parameter procedure: procedure to store
-    public class func registerUnarchiveProcedure(identifier identifier: String, procedure: ArchiveUnarchiveProcedure) {
+    open class func registerUnarchiveProcedure(identifier: String, procedure: @escaping ArchiveUnarchiveProcedure) {
         self.defaultArchiver.unarchiveProcedures[identifier] = procedure
     }
     
     /// Register procedure to restore data.
     /// - parameter identifier: string to specify struct
     /// - parameter procedure: procedure to store
-    public class func registerRestoreProcedure(identifier identifier: String, procedure: ArchiveRestoreProcedure) {
+    open class func registerRestoreProcedure(identifier: String, procedure: @escaping ArchiveRestoreProcedure) {
         self.defaultArchiver.restoreProcedures[identifier] = procedure
     }
     
     /// Return stored procedure to unarchive.
     /// - parameter identifier: string to specify struct
     /// - returns: stored procedure or nil if procedure for identifier is not stored
-    public func unarchiveProcedure(identifier identifier: String) -> ArchiveUnarchiveProcedure? {
+    open func unarchiveProcedure(identifier: String) -> ArchiveUnarchiveProcedure? {
         guard let procedure: ArchiveUnarchiveProcedure = self.unarchiveProcedures[identifier] else {
             return nil
         }
@@ -53,7 +53,7 @@ public class StructArchiver {
     /// Return stored procedure to retore struct.
     /// - parameter identifier: string to specify struct
     /// - returns: stored procedure or nil if procedure for identifier is not stored
-    public func restoreProcedure(identifier identifier: String) -> ArchiveRestoreProcedure? {
+    open func restoreProcedure(identifier: String) -> ArchiveRestoreProcedure? {
         guard let procedure: ArchiveRestoreProcedure = self.restoreProcedures[identifier] else {
             return nil
         }
@@ -63,25 +63,25 @@ public class StructArchiver {
     /// Unarchive data.
     /// - parameter data: data to unarchive
     /// - returns: unarchived object
-    public func unarchive(data data: NSData) -> Archivable? {
+    open func unarchive(data: Data) -> Archivable? {
         
         // length_of_identifier / others
-        let splitData1: NSData.SplitData = data.split(length: sizeof(UInt8))
+        let splitData1: Data.SplitData = data.split(length: MemoryLayout<UInt8>.size)
         var count: UInt8 = 0
-        splitData1.former.getBytes(&count, length: sizeof(UInt8))
+        (splitData1.former as NSData).getBytes(&count, length: MemoryLayout<UInt8>.size)
         
         // identifier / others
-        let splitData2: NSData.SplitData = splitData1.latter.split(length: Int(count))
-        let identifier = NSString(data: splitData2.former, encoding: NSUTF8StringEncoding) as? String ?? ""
+        let splitData2: Data.SplitData = splitData1.latter.split(length: Int(count))
+        let identifier = NSString(data: splitData2.former, encoding: String.Encoding.utf8.rawValue) as String? ?? ""
                 
         guard let procedure = self.unarchiveProcedure(identifier: identifier) else {
             return nil
         }
         
-        let unarchived: Archivable = procedure(data: splitData2.latter)
+        let unarchived: Archivable = procedure(splitData2.latter)
         
         if let dictionary = unarchived as? ArchivableDictionary, let restoreProcedure = self.restoreProcedure(identifier: identifier) {
-            return restoreProcedure(dictionary: dictionary)
+            return restoreProcedure(dictionary)
         } else {
             return unarchived
         }
@@ -90,13 +90,13 @@ public class StructArchiver {
     /// Unarchive data.
     /// - parameter data: data to unarchive
     /// - returns: unarchived object
-    public class func unarchive(data data: NSData) -> Archivable? {
+    open class func unarchive(data: Data) -> Archivable? {
         return self.defaultArchiver.unarchive(data: data)
     }
     
     /// Register procedures for unarchiving and restoring struct.
     /// - parameter withCustomStructActivations: closure to register procedures for custom struct
-    public class func activateStandardArchivables(withCustomStructActivations withCustomStructActivations:(() -> Void)?) {
+    open class func activateStandardArchivables(withCustomStructActivations:(() -> Void)?) {
         
         Int.activateArchive()
         UInt.activateArchive()

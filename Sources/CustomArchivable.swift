@@ -21,7 +21,7 @@ public extension CustomArchivable {
         
         var children: ArchivableDictionary = ArchivableDictionary()
         Mirror(reflecting: self).children.forEach { label, value in
-            if let label = label, value = value as? Archivable {
+            if let label = label, let value = value as? Archivable {
                 if let elementArchivable: ElementArchivable = value as? ElementArchivable {
                     children[label] = elementArchivable.archivable()
                 } else {
@@ -53,12 +53,12 @@ public extension CustomArchivable {
         return self.archivedIDLength + Int.ArchivedDataLength*(1+archivableChildren.keys.count*2) + elementsLength
     }
     
-    public var archivedHeaderData: [NSData] {
+    public var archivedHeaderData: [Data] {
         let archivableChildren: ArchivableDictionary = self.archivable() as! ArchivableDictionary
         return archivableChildren.archivedHeaderData
     }
     
-    public var archivedBodyData: [NSData] {
+    public var archivedBodyData: [Data] {
         let archivableChildren: ArchivableDictionary = self.archivable() as! ArchivableDictionary
         return archivableChildren.archivedBodyData
     }
