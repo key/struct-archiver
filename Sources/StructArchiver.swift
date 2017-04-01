@@ -72,7 +72,7 @@ open class StructArchiver {
         
         // identifier / others
         let splitData2: Data.SplitData = splitData1.latter.split(length: Int(count))
-        let identifier = NSString(data: splitData2.former, encoding: String.Encoding.utf8.rawValue) as String? ?? ""
+        let identifier = String(data: splitData2.former, encoding: .utf8) ?? ""
                 
         guard let procedure = self.unarchiveProcedure(identifier: identifier) else {
             return nil

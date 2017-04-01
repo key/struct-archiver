@@ -213,16 +213,14 @@ extension String: Archivable {
     public static var unarchiveProcedure: ArchiveUnarchiveProcedure {
         
         return { data in
-            
             // get length of string
             let lengthData: Data = data.subdata(in: Range(uncheckedBounds: (0, Int.ArchivedDataLength)))
             let length: Int = StructArchiver.defaultArchiver.unarchive(data: lengthData) as! Int
             
             // unarchive data as String
             let textRange = Range(uncheckedBounds: (Int.ArchivedDataLength, length))
-//            let textRange = NSMakeRange(Int.ArchivedDataLength, length)
             let textData = data.subdata(in: textRange)
-            let text = NSString(data: textData, encoding: String.Encoding.utf8.rawValue) as String? ?? ""
+            let text = String(data: textData, encoding: .utf8) ?? ""
             return text
         }
     }
@@ -370,7 +368,7 @@ extension Dictionary: Archivable, ElementArchivable {
             let countData = data.subdata(in: Range(uncheckedBounds: (0, Int.ArchivedDataLength)))
             let count: Int = StructArchiver.unarchive(data: countData) as! Int
             
-            let subdata: Data = data.subdata(in: Range(uncheckedBounds: (0, data.count - Int.ArchivedDataLength)))
+            let subdata: Data = data.subdata(in: Range(uncheckedBounds: (Int.ArchivedDataLength, data.count - Int.ArchivedDataLength)))
             let splitData: Data.SplitData = subdata.split(length: Int.ArchivedDataLength*count*2)
             
             // get lengths of each data
